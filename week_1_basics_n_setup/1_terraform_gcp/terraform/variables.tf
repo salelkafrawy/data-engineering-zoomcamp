@@ -4,6 +4,8 @@ locals {
 
 variable "project" {
   description = "Your GCP Project ID"
+  default = "aerial-garden-376120"
+  type = string
 }
 
 variable "region" {
