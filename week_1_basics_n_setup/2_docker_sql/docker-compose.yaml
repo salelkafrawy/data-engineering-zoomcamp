@@ -1,3 +1,4 @@
+version: "3"
 services:
   pgdatabase:
     image: postgres:13
@@ -6,7 +7,7 @@ services:
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=ny_taxi
     volumes:
-      - "./ny_taxi_postgres_data:/var/lib/postgresql/data:rw"
+      - "/home/sara/Documents/ny_taxi_postgres_data:/var/lib/postgresql/data:rw"
     ports:
       - "5432:5432"
   pgadmin:
@@ -17,3 +18,47 @@ services:
     ports:
       - "8080:80"
     
+
+# services:
+#   pgdatabase:
+#     container_name: pgdatabase
+#     image: postgres:13
+#     environment:
+#       - POSTGRES_USER=root
+#       - POSTGRES_PASSWORD=root
+#       - POSTGRES_DB=ny_taxi
+#     volumes:
+#       - "./ny_taxi_postgres_data:/var/lib/postgresql/data:rw"
+#     ports:
+#       - "5432:5432"
+#     networks:
+#       - pg-network
+#   pgadmin:
+#     container_name: pgadmin
+#     image: dpage/pgadmin4
+#     environment:
+#       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+#       - PGADMIN_DEFAULT_PASSWORD=root
+#     ports:
+#       - "8080:80"
+#     networks:
+#       - pg-network
+  
+#   ingest_data:
+#     container_name: ingest-data
+#     image: python:3.9.1
+#     build:
+#       context: ${PWD}
+#       dockerfile: Dockerfile
+#     command:
+#       - --user=root
+#       - --password=root
+#       - --host=pgdatabase
+#       - --port=5432
+#       - --db=ny_taxi
+#       - --table_name=yellow_taxi_trips
+#       - --url=${URL}
+#     depends_on:
+#       - pgdatabase
+#     networks:
+#       - pg-network

@@ -3,11 +3,10 @@
 
 import os
 import argparse
-
 from time import time
-
 import pandas as pd
 from sqlalchemy import create_engine
+
 
 
 def main(params):
@@ -18,8 +17,8 @@ def main(params):
     db = params.db
     table_name = params.table_name
     url = params.url
-    
-    # the backup files are gzipped, and it's important to keep the correct extension
+
+       # the backup files are gzipped, and it's important to keep the correct extension
     # for pandas to be able to open the file
     if url.endswith('.csv.gz'):
         csv_name = 'output.csv.gz'
@@ -30,16 +29,20 @@ def main(params):
 
     engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
 
+    # engine = create_engine('postgresql://root:root@localhost:5432/ny_taxi')
     df_iter = pd.read_csv(csv_name, iterator=True, chunksize=100000)
+    # df_iter = pd.read_csv('green_tripdata_2019-01.csv', iterator=True, chunksize=100000)
 
     df = next(df_iter)
 
-    df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
-    df.tpep_dropoff_datetime = pd.to_datetime(df.tpep_dropoff_datetime)
+    df.lpep_pickup_datetime = pd.to_datetime(df.lpep_pickup_datetime)
+    df.lpep_dropoff_datetime = pd.to_datetime(df.lpep_dropoff_datetime)
 
     df.head(n=0).to_sql(name=table_name, con=engine, if_exists='replace')
+    # df.head(n=0).to_sql(name='green_taxi_data', con=engine, if_exists='replace')
 
     df.to_sql(name=table_name, con=engine, if_exists='append')
+    # df.to_sql(name='green_taxi_data', con=engine, if_exists='append')
 
 
     while True: 
@@ -49,10 +52,11 @@ def main(params):
             
             df = next(df_iter)
 
-            df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
-            df.tpep_dropoff_datetime = pd.to_datetime(df.tpep_dropoff_datetime)
+            df.lpep_pickup_datetime = pd.to_datetime(df.lpep_pickup_datetime)
+            df.lpep_dropoff_datetime = pd.to_datetime(df.lpep_dropoff_datetime)
 
             df.to_sql(name=table_name, con=engine, if_exists='append')
+            # df.to_sql(name='green_taxi_data', con=engine, if_exists='append')
 
             t_end = time()
 
@@ -61,6 +65,13 @@ def main(params):
         except StopIteration:
             print("Finished ingesting data into the postgres database")
             break
+
+    os.system(f"wget https://s3.amazonaws.com/nyc-tlc/misc/taxi+_zone_lookup.csv -O taxi+_zone_lookup.csv")
+    
+    df_zones = pd.read_csv('taxi+_zone_lookup.csv')
+    df_zones.to_sql(name='zones', con=engine, if_exists='replace')
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Ingest CSV data to Postgres')
@@ -76,3 +87,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args)
+
+
+
+
+
