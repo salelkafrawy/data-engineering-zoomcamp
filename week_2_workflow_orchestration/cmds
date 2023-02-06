@@ -1,0 +1,24 @@
+Open Prefect UI:
+
+    prefect orion start
+
+configure prefect to communicate with the server with:
+    
+    prefect config set PREFECT_API_URL=http://127.0.0.1:4200/api
+
+view the API reference documentation at http://127.0.0.1:4200/docs
+
+To register GCP modules in Prefect Blocks:
+
+    prefect block register -m prefect_gcp
+
+Deployment:
+    build:
+        prefect deployment build ./4_parameterized_flow.py:etl_parent_flow -n "Parameterized ETL"
+        prefect deployment build -n q4_github -sb github/de-zoomcamp-github ./week_2_workflow_orchestration/parameterized_flow.py:etl_parent_flow
+    apply:
+        prefect deployment apply etl_parent_flow-deployment.yaml
+
+
+
+prefect deployment build ./week_2_workflow_orchestration/parameterized_flow.py:etl_parent_flow -n "GitHub Storage Flow" -sb github/de-zoomcamp-github -o etl_web_to_gcs_hw2_github-deployment.yaml --apply 

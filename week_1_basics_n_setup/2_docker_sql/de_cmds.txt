@@ -1,0 +1,130 @@
+postgres locally:
+	pgcli -h localhost -p 5432 -u root -d ny_taxi
+	SELECT count(1) FROM green_taxi_data
+
+running postgres docker image:
+	(-v to map a volume in our file system in the host machine to a folder in the container, this is called mounting - to always have our data updated and not reset after each time we run the docker container)
+	(-p map port 8080 on our local machine to port 80 on the docker image)
+	docker run -it \
+		-e POSTGRES_USER="root" \
+		-e POSTGRES_PASSWORD="root" \
+		-e POSTGRES_DB="ny_taxi" \
+		-v /home/sara/Documents/ny_taxi_postgres_data:/var/lib/postgresql/data \
+		-p 5432:5432 \
+		postgres:13
+
+
+
+PgAdmin + Docker:
+(-p map port 8080 on our local machine to port 80 on the docker image)
+
+	docker run -it \
+		-e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+		-e PGADMIN_DEFAULT_PASSWORD="root" \
+		-p 8080:80 \
+		dpage/pgadmin4 
+
+
+
+Create network to link pgAdmin in its docker container with the database (I think):
+
+	docker network create pg-network
+
+
+Now, we want to say "this container should run in this network":
+	(--network is the network we just created above)
+	(--name this will let pgAdmin to discover postgres)
+docker run -it \
+	-e POSTGRES_USER="root" \
+	-e POSTGRES_PASSWORD="root" \
+	-e POSTGRES_DB="ny_taxi" \
+	-v /home/sara/Documents/ny_taxi_postgres_data:/var/lib/postgresql/data \
+	-p 5432:5432 \
+	--network=pg-network \
+	--name pg-database \
+	postgres:13
+
+
+
+
+docker run -it \
+	-e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+	-e PGADMIN_DEFAULT_PASSWORD="root" \
+	-p 8080:80 \
+	--network=pg-network \
+	--name pgadmin \
+	dpage/pgadmin4 
+
+
+
+https://stackoverflow.com/questions/38249434/docker-postgres-failed-to-bind-tcp-0-0-0-05432-address-already-in-use
+If lsof -i :5432 doesn't show you any output, you can use sudo ss -lptn 'sport = :5432' to see what process is bound to the port.
+
+Proceed further with kill <pid>
+
+
+Ingest the data:
+
+URL="https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2019-01.csv.gz"
+python ingest_data.py \
+	--user=root \
+	--password=root \
+	--host=localhost \
+	--port=5432 \
+	--db=ny_taxi \
+	--table_name=green_taxi_trips \
+	--url=${URL}
+
+
+Create docker for ingest_data.py script:
+
+	docker build -t taxi_ingest:v001 .
+
+Run the docker file:
+
+URL="https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2019-01.csv.gz"
+docker run -it \
+--network=pg-network \
+taxi_ingest:v001 \
+	--user=root \
+	--password=root \
+	--host=pg-database \
+	--port=5432 \
+	--db=ny_taxi \
+	--table_name=green_taxi_trips \
+	--url=${URL}
+
+URL="https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2019-01.csv.gz"
+docker run -it \
+taxi_ingest:v001 \
+	--user=root \
+	--password=root \
+	--host=localhost \
+	--port=5432 \
+	--db=ny_taxi \
+	--table_name=green_taxi_trips \
+	--url=${URL}
+
+
+Run docker compose (-d is detachable; we get the terminal back):
+	
+	docker-compose up -d
+
+Shut down docker compose (after ctrl+c):
+
+	docker-compose down
+
+
+
+
+
+SFTP hostname:
+copy file from local laptop to the host: 
+	put fileName
+
+
+Shut down GCP VM:
+	sudo shutdown
+
+Data Lake: store raw data in an organized fashion
+Data Warehouse: more structured format
