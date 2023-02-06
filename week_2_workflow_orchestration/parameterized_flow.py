@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 import pandas as pd
 from prefect import flow, task
-# from prefect_gcp.cloud_storage import GcsBucket
-from prefect.filesystems import GCS
+from prefect_gcp.cloud_storage import GcsBucket
 from random import randint
 from prefect.tasks import task_input_hash
 from datetime import timedelta
