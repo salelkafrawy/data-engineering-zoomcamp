@@ -20,3 +20,5 @@ Deployment:
         prefect deployment apply etl_parent_flow-deployment.yaml
     build and apply:
         prefect deployment build ./week_2_workflow_orchestration/parameterized_flow.py:etl_parent_flow -n "GitHub Storage Flow" -sb github/de-zoomcamp-github -o etl_web_to_gcs_hw2_github-deployment.yaml --apply 
+
+Prefect flow run notification
